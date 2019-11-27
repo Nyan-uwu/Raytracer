@@ -13,6 +13,12 @@ void setup() {
     View  = new View(new PVector(floor((width-1)/2), 0),
                      new PVector(floor((width-1)/2), height-1));
 
+
+    println("Scene.pos: " + Scene.pos);
+    println("Scene.size: " + Scene.size);
+    println("View.pos: " + View.pos);
+    println("View.size: " + View.size);
+
     Cam = new Camera(new PVector(floor(Scene.size.x/2), floor(Scene.size.y/2)));
 }
 
@@ -46,7 +52,7 @@ class Camera
     Camera(PVector _pos) {
         this.pos = _pos;
 
-        for (int i = 0; i < 5; ++i) {
+        for (int i = 0; i < 1; ++i) {
             this.bounds.add(
                 new Boundry(
                     new PVector(
@@ -278,7 +284,7 @@ void keyPressed() {
 void keyReleased() {
     if (key == 'w' && Cam.move == 1) {
         Cam.move = 0;
-    } else if (key == 'w' && Cam.move == -1) {
+    } else if (key == 's' && Cam.move == -1) {
         Cam.move = 0;
     }
     if (key == 'a' && Cam.rotation == -1) {
