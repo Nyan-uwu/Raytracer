@@ -11,6 +11,10 @@ class Scene
     void render() {
         noFill(); stroke(255);
         // rect(this.pos.x, this.pos.y, this.size.x, this.size.y);
+        if (placedClick) {
+            stroke(255); fill(255); 
+            line(ipos.x, ipos.y, mouseX, mouseY);
+        }
     }
 }
 
@@ -37,6 +41,9 @@ class View
                 float d = PVector.dist(Cam.pos, r.closest_point);
                 float a = PVector.angleBetween(r.dir, Cam.move_angle);
                 distances[i] = d*cos(a);
+
+                // Fish Eye Effect
+                // distances[i] = PVector.dist(Cam.pos, r.closest_point);
             }
             else {
                 distances[i] = 999999;

@@ -3,6 +3,8 @@ View  View;
 
 Camera Cam;
 
+Boolean loadwindow_open = false;
+
 void setup() {
     size(801, 401);
     frameRate(120);
@@ -14,14 +16,19 @@ void setup() {
                      new PVector(floor((width-1)/2), height-1));
 
 
-    println("Scene.pos: " + Scene.pos);
-    println("Scene.size: " + Scene.size);
-    println("View.pos: " + View.pos);
-    println("View.size: " + View.size);
+    // println("Scene.pos: " + Scene.pos);
+    // println("Scene.size: " + Scene.size);
+    // println("View.pos: " + View.pos);
+    // println("View.size: " + View.size);
 
     Cam = new Camera(new PVector(floor(Scene.size.x/2), floor(Scene.size.y/2)));
+    stroke(255); fill(255);
+    line(floor((width-1)/2), 0, floor((width-1)/2), height);
 }
 
+
+String fileName = "";
+String errorText = "";
 void draw() {
     background(0);
 
@@ -33,11 +40,27 @@ void draw() {
 
     // Render All Scenes Info Onto View :( help this is gonna be hard
     View.render();
+
+    if (loadwindow_open) {
+        fill(0); stroke(255); rectMode(CORNER);
+        rect(100, 100, 600, 200);
+
+        textSize(18);
+        fill(255); stroke(255);
+        text("Load File", 150, 150);
+        text(errorText, 150, 200);
+
+        fill(0); stroke(255);
+        rect(125, 225, 550, 50);
+
+        fill(255); stroke(255);
+        text(fileName, 130, 250);
+    }
 }
 
 class Camera
 {
-    int fov = 70,
+    int fov = 80,
         rad = 10,
         ang = -35,
         rotation = 0,
@@ -52,20 +75,20 @@ class Camera
     Camera(PVector _pos) {
         this.pos = _pos;
 
-        for (int i = 0; i < 1; ++i) {
-            this.bounds.add(
-                new Boundry(
-                    new PVector(
-                        floor(random(Scene.pos.x, Scene.pos.x+Scene.size.x)),
-                        floor(random(Scene.pos.y, Scene.pos.y+Scene.size.y))
-                    ),
-                    new PVector(
-                        floor(random(Scene.pos.x, Scene.pos.x+Scene.size.x)),
-                        floor(random(Scene.pos.y, Scene.pos.y+Scene.size.y))
-                    )
-                )
-            );
-        }
+        // for (int i = 0; i < 5; ++i) {
+        //     this.bounds.add(
+        //         new Boundry(
+        //             new PVector(
+        //                 floor(random(Scene.pos.x, Scene.pos.x+Scene.size.x)),
+        //                 floor(random(Scene.pos.y, Scene.pos.y+Scene.size.y))
+        //             ),
+        //             new PVector(
+        //                 floor(random(Scene.pos.x, Scene.pos.x+Scene.size.x)),
+        //                 floor(random(Scene.pos.y, Scene.pos.y+Scene.size.y))
+        //             )
+        //         )
+        //     );
+        // }
 
         // Walls //
         this.bounds.add(
@@ -263,22 +286,89 @@ class Boundry {
 }
 
 void keyPressed() {
-    if (key == 'a') {
-        Cam.rotation = -1;
-        // println("You Pressed: " + key);
+    if (!loadwindow_open) {
+        if (key == 'a') {
+            Cam.rotation = -1;
+            // println("You Pressed: " + key);
+        }
+        if (key == 'd') {
+            Cam.rotation = 1;
+            // println("You Pressed: " + key);
+        }
+        if (key == 'w') {
+            Cam.move = 1;
+            // println("You Pressed: " + key);
+        }
+        if (key == 's') {
+            Cam.move = -1;
+            // println("You Pressed: " + key);
+        }
+        if (key == 'l') {
+            loadwindow_open = true;
+        }
+    } else {
+        if (key == ':') {
+            fileName = "";
+            loadwindow_open = false;
+        } else {
+            if (key == BACKSPACE) { fileName = fileName.length() > 0 ? fileName.substring(0, fileName.length()-1) : ""; }
+            else if ((key >= 48 && key <= 57) || (key >= 65 && key <= 90) || (key >= 97 && key <= 122)) {
+                fileName += key;
+            }
+            else if (key == ENTER) {
+                loadFile();
+            }
+        }
     }
-    if (key == 'd') {
-        Cam.rotation = 1;
-        // println("You Pressed: " + key);
-    }
-    if (key == 'w') {
-        Cam.move = 1;
-        // println("You Pressed: " + key);
-    }
-    if (key == 's') {
-        Cam.move = -1;
-        // println("You Pressed: " + key);
-    }
+}
+
+class InvalidWMAPFileException extends Exception {
+    InvalidWMAPFileException(String s) { super(s); }
+}
+void loadFile() {
+    String path = "./maps/"+fileName+".wmap";
+    try {
+        String[] file = loadStrings(path);
+        ArrayList<Boundry> bounds = new ArrayList<Boundry>();
+        int line = 1;
+        for (String s : file) { if (s != "") {
+            // println(s);
+            // println(s.charAt(0));
+            if (s.charAt(0) == '#') { } else {
+                String[] coords = s.split(",");
+                if (coords.length == 2) {
+                    String[] posa = coords[0].split(":");
+                    String[] posb = coords[1].split(":");
+                    bounds.add(new Boundry(new PVector(float(posa[0]), float(posa[1])),
+                                        new PVector(float(posb[0]), float(posb[1]))));
+                } else if (coords.length == 4) {
+
+                    //Create shape between all 4 points
+                    String[] posa = coords[0].split(":");
+                    String[] posb = coords[1].split(":");
+                    String[] posc = coords[2].split(":");
+                    String[] posd = coords[3].split(":");
+
+                    bounds.add(new Boundry(new PVector(float(posa[0]), float(posa[1])),
+                                        new PVector(float(posb[0]), float(posb[1]))));
+                    bounds.add(new Boundry(new PVector(float(posb[0]), float(posb[1])),
+                                        new PVector(float(posc[0]), float(posc[1]))));
+                    bounds.add(new Boundry(new PVector(float(posc[0]), float(posc[1])),
+                                        new PVector(float(posd[0]), float(posd[1]))));
+                    bounds.add(new Boundry(new PVector(float(posd[0]), float(posd[1])),
+                                        new PVector(float(posa[0]), float(posa[1]))));
+
+                } else {
+                    throw new InvalidWMAPFileException("Contents of WMAP is invalid | [Line " + line + "]");
+                }
+            }
+            ++line;
+        } }
+        Cam.bounds      = bounds;
+        loadwindow_open = false;
+        errorText       = "";
+        fileName        = "";
+    } catch(Exception ex) { fileName = ""; errorText = ex.getMessage(); }
 }
 
 void keyReleased() {
@@ -292,5 +382,27 @@ void keyReleased() {
     }
     else if (key == 'd' && Cam.rotation == 1) {
         Cam.rotation = 0;
+    }
+}
+
+Boolean placedClick = false;
+PVector ipos;
+void mousePressed() {
+    if (mouseX >= 0 && mouseX <= Scene.size.x && mouseY >= 0 && mouseY <= Scene.size.y) {
+        if (mouseButton == LEFT) {
+            if (!placedClick) {
+                ipos = new PVector(mouseX, mouseY);
+                placedClick = true;
+            } else {
+                Cam.bounds.add(
+                    new Boundry(ipos, new PVector(mouseX, mouseY))
+                );
+                ipos = null;
+                placedClick = false;
+            }
+        } else if (mouseButton == RIGHT) {
+            placedClick = false;
+            ipos = null;
+        }
     }
 }
